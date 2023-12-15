@@ -1,0 +1,243 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+
+void shuffle(int wDeck[][13]);
+void deal(const int wDeck[][13], const char **wFace, const char **wSuit);
+bool pair(int *arr);
+bool two_pair(int *arr);
+bool three_kind(int *arr);
+bool four_kind(int *arr);
+bool fullhouse(int *arr);
+bool flush(int *arr);
+bool straight(int *arr);
+bool flush_straight(int *arr);
+
+
+int compare(const void *arg1, const void *arg2) {
+	return  (*(int *)arg1 - *(int *)arg2);
+}
+
+int f_straightflush = 0;
+int f_straight = 0;
+int f_flush = 0;
+int f_fullhouse = 0;
+int f_three = 0;
+int f_four = 0;
+int f_two = 0;
+int f_pair = 0;
+int f_nothing = 0;
+	
+
+int main(){
+	
+	const char *suit[4] = {"Heart", "Diamonds", "Clubs", "Spades"};
+	const char *face[13] = {"A", "2", "3", "4", "5", "6", "7", "8","9", "10", "J", "Q", "K"};
+
+	
+	for(int i = 1; i <= 2598960; i++){//
+		int deck[4][13]={0};
+		srand(time(0));
+		
+		shuffle(deck);
+		deal(deck, face, suit);
+		
+	}
+	
+	printf("straight flush %d\n", f_straightflush);
+	printf("flush %d\n", f_flush);
+	printf("straight %d\n", f_straight);
+	printf("pair %d\n", f_pair);
+	printf("two pair %d\n", f_two);
+	printf("three of kind %d\n", f_three);
+	printf("four of kind %d\n", f_four);
+	printf("full house %d\n", f_fullhouse);
+	printf("nothing %d\n", f_nothing);
+	return 0;
+}
+
+void shuffle(int wDeck[][13]){
+	int row, col, card;
+
+	for(card = 1; card <= 52; card++){
+		do{
+		row = rand()%4;
+		col = rand()%13;
+		}while(wDeck[row][col] != 0);
+		
+		wDeck[row][col]=card;
+	}
+}
+
+void deal(const int wDeck[][13], const char **wFace, const char **wSuit){
+	int i, row, col;
+	int freq_face[13]={0};
+	int freq_suit[4]={0};
+	int arr[10]={0};
+	
+	
+	for(i = 1; i <= 5; i++){
+		for(row = 0; row <= 3; row++){
+			for(col = 0; col <= 12; col++){
+				
+				if(wDeck[row][col] == i){
+					//printf("%s of %s\n", wFace[col], wSuit[row]);
+					arr[i-1]=col;
+					arr[i+4]=row;
+				}
+				if(wDeck[row][col] == i){
+					
+					freq_face[col]++;
+					freq_suit[row]++;
+					
+				}
+				
+			}
+		}
+	}
+	qsort((void *)arr, 5, sizeof(int), compare);
+	
+//	for (int i = 0; i<10; i++){
+//		printf("%d ", arr[i]);
+//	}
+//	printf("\n");
+	if(flush_straight(arr)){
+		f_straightflush++;
+		//printf("flush_straight\n");
+	}
+	else if(flush(arr)){
+		f_flush++;
+		//printf("flush\n");
+	}
+	else if(straight(arr)){
+		f_straight++;
+		//printf("straight\n");
+	}
+	else if(fullhouse(arr)){
+		f_fullhouse++;
+		//printf("fullhouse\n");
+	}
+	else if(three_kind(arr)){
+		f_three++;
+		//printf("three_kind\n");
+	}
+	else if(four_kind(arr)){
+		f_four++;
+		//printf("four_kind\n");
+	}
+	else if(two_pair(arr)){
+		f_two++;
+		//printf("two_pair\n");
+	}
+	else if(pair(arr)){
+		f_pair++;
+		//printf("pair\n");
+	}else{
+		f_nothing++;
+		//printf("nothing\n");
+	}
+	
+	
+	
+}
+
+bool flush_straight(int *arr){
+	if(arr[0] == 0 && arr[1] == 9 && arr[2] == 10 && arr[3] == 11 && arr[4] == 12){
+		for(int j = 0; j < 4; j++){
+			if(arr[j+5] != arr[j+6]){
+				break;
+			}
+			if(j==3)
+				return 1;
+		}
+	}
+	
+	for(int i = 0; i < 4; i++){
+		if(arr[i] + 1 != arr[i+1]){
+			return 0;
+		}
+		if(arr[i+5] != arr[i+6])
+			return 0;
+	}
+	return 1;
+}
+
+bool flush(int *arr){
+	for(int j = 0; j < 4; j++){
+		if(arr[j+5] != arr[j+6]){
+			return 0;
+		}
+	}
+	return 1;
+}
+
+bool straight(int *arr){
+	if(arr[0] == 0 && arr[1] == 9 && arr[2] == 10 && arr[3] == 11 && arr[4] == 12){
+		return 1;
+	}
+	for(int i = 0; i < 4; i++){
+		if(arr[i] + 1 != arr[i+1]){
+			return 0;
+		}
+	}
+	return 1;
+}
+
+bool four_kind(int *arr){
+	for(int i = 1; i < 3; i++){
+		if(arr[i] != arr[i+1]){
+			return 0;
+		}
+	}
+	
+	if(arr[0] == arr[1] || arr[3] == arr[4]){
+		return 1;
+	}
+	return 0;
+}
+	
+bool fullhouse(int *arr){
+	if(arr[0] == arr[1] && arr[3] == arr[4]){
+		if(arr[1] == arr[2] || arr[2] == arr[3]){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+bool two_pair(int *arr){
+	if(arr[0] == arr[1] && arr[2] == arr[3]){
+		return 1;
+	}
+	if(arr[1] == arr[2] && arr[3] == arr[4]){
+		return 1;
+	}
+	if(arr[0] == arr[1]&& arr[3] == arr[4]){
+		return 1;
+	}
+	
+	return 0;
+}
+
+bool three_kind(int *arr){
+	if(arr[0] == arr[1] && arr[1] == arr[2]){
+		return 1;
+	}
+	if(arr[3] == arr[1] && arr[1] == arr[2]){
+		return 1;
+	}
+	if(arr[2] == arr[3] && arr[3] == arr[4]){
+		return 1;
+	}
+	return 0;
+}
+
+bool pair(int *arr){
+	for(int i = 0; i < 4; i++){
+		if(arr[i] == arr[i+1]){
+			return 1;
+		}
+	}
+	return 0;
+}
